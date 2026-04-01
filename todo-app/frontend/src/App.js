@@ -45,7 +45,7 @@ export default function App() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addTodo()}
-          placeholder="Add new notee"
+          placeholder="Add new not"
         />
         <button style={styles.addBtn} onClick={addTodo}>Add</button>
       </div>

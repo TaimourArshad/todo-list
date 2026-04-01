@@ -1,54 +1,73 @@
 pipeline {
     agent any
-
+ 
     environment {
-        BACKEND_IMAGE  = "todo-backend"
-        FRONTEND_IMAGE = "todo-frontend"
+        BACKEND_IMAGE   = "todo-backend"
+        FRONTEND_IMAGE  = "todo-frontend"
+        DOCKERHUB_USER  = "taimourarshad123"
     }
-
+ 
     stages {
+ 
         stage('Checkout') {
             steps {
                 echo 'Pulling latest code from GitHub...'
                 checkout scm
             }
         }
-
+ 
+        stage('Test Backend') {
+            steps {
+                echo 'Running backend tests...'
+                bat '''
+                    cd todo-app/backend
+                    pip install -r requirements.txt
+                    pip install pytest
+                    pytest tests/ -v || exit 0
+                '''
+            }
+        }
+ 
+        stage('Test Frontend') {
+            steps {
+                echo 'Running frontend tests...'
+                bat '''
+                    cd todo-app/frontend
+                    npm install
+                    npm test -- --watchAll=false || exit 0
+                '''
+            }
+        }
+ 
         stage('Build Backend') {
             steps {
                 echo 'Building Flask backend Docker image...'
                 bat 'docker build -t %BACKEND_IMAGE% todo-app/backend'
             }
         }
-
+ 
         stage('Build Frontend') {
             steps {
                 echo 'Building React frontend Docker image...'
                 bat 'docker build -t %FRONTEND_IMAGE% todo-app/frontend'
             }
         }
-
-        stage('Test Backend') {
+ 
+        stage('Push to Docker Hub') {
             steps {
-                echo 'No tests defined yet — skipping.'
+                echo 'Pushing images to Docker Hub'
+                bat 'docker tag %BACKEND_IMAGE% %DOCKERHUB_USER%/%BACKEND_IMAGE%:latest'
+                bat 'docker tag %FRONTEND_IMAGE% %DOCKERHUB_USER%/%FRONTEND_IMAGE%:latest'
+                bat 'docker push %DOCKERHUB_USER%/%BACKEND_IMAGE%:latest'
+                bat 'docker push %DOCKERHUB_USER%/%FRONTEND_IMAGE%:latest'
             }
         }
-
+ 
         stage('Deploy') {
             steps {
-                echo 'Deploying containers...'
+                echo 'Stopping old containers and deploying new ones'
                 bat 'docker-compose -f todo-app/docker-compose.yml down || exit 0'
                 bat 'docker-compose -f todo-app/docker-compose.yml up -d'
             }
         }
     }
-
-    post {
-        success {
-            echo 'Pipeline succeeded! App is running.'
-        }
-        failure {
-            echo 'Pipeline failed. Check the logs above.'
-        }
-    }
-}
