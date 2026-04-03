@@ -15,16 +15,33 @@ def get_todos():
 def add_todo():
     global next_id
     data = request.get_json()
-    todo = {"id": next_id, "text": data["text"], "done": False}
+    todo = {
+        "id": next_id,
+        "text": data["text"],
+        "done": False,
+        "priority": data.get("priority", "Medium"),
+        "category": data.get("category", "General"),
+        "due_date": data.get("due_date", "")
+    }
     todos.append(todo)
     next_id += 1
     return jsonify(todo), 201
 
 @app.route("/todos/<int:todo_id>", methods=["PUT"])
-def toggle_todo(todo_id):
+def update_todo(todo_id):
+    data = request.get_json()
     for todo in todos:
         if todo["id"] == todo_id:
-            todo["done"] = not todo["done"]
+            if "done" in data:
+                todo["done"] = data["done"]
+            if "text" in data:
+                todo["text"] = data["text"]
+            if "priority" in data:
+                todo["priority"] = data["priority"]
+            if "category" in data:
+                todo["category"] = data["category"]
+            if "due_date" in data:
+                todo["due_date"] = data["due_date"]
             return jsonify(todo)
     return jsonify({"error": "Not found"}), 404
 
