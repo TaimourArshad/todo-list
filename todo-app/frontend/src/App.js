@@ -154,7 +154,7 @@ export default function App() {
               {CATEGORIES.map(c => <option key={c}>{c}</option>)}
             </select>
             <select style={sel} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-              <option value="All">All Status</option>
+              <option value="Alllll">All Status</option>
               <option value="Active">Active</option>
               <option value="Done">Done</option>
             </select>
